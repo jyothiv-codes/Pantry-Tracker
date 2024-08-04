@@ -38,5 +38,3 @@ next-env.d.ts
 node_modules
 .next
 .env.local
-
-firebase.js
