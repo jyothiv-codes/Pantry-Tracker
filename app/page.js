@@ -90,7 +90,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    updateInventory();
+    if (typeof window !== 'undefined') {
+      updateInventory();
+    }
   }, []);
 
   useEffect(() => {
@@ -173,16 +175,16 @@ export default function Home() {
         },
         body: JSON.stringify({ query }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       if (data.error) {
         throw new Error(data.error);
       }
-  
+
       setOpenAIResponse(data.answer || 'No answer found');
     } catch (error) {
       console.error('Error fetching OpenAI response:', error);
@@ -195,7 +197,6 @@ export default function Home() {
     const query = `Using these ingredients: ${ingredients}, suggest a few recipes names, not the complete recipe. If an ingredient isn't edible, exclude it from consideration`;
     fetchOpenAIResponse(query);
   };
-  
 
   return (
     <Box sx={containerStyle}>
