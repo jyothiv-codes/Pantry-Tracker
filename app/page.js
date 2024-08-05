@@ -169,39 +169,35 @@ export default function Home() {
   };
 
   const fetchOpenAIResponse = async (query) => {
-    if (typeof window !== 'undefined') {
-      try {
-        const response = await fetch('/api/ask-openai', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ query }),
-        });
+    try {
+      const response = await fetch('/api/ask-openai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+      });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        setOpenAIResponse(data.answer || 'No answer found');
-      } catch (error) {
-        console.error('Error fetching OpenAI response:', error);
-        setOpenAIResponse('Failed to fetch response');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setOpenAIResponse(data.answer || 'No answer found');
+    } catch (error) {
+      console.error('Error fetching OpenAI response:', error);
+      setOpenAIResponse('Failed to fetch response');
     }
   };
 
   const handleAskOpenAI = () => {
-    if (typeof window !== 'undefined') {
-      const ingredients = inventory.map(item => item.name).join(', ');
-      const query = `Using these ingredients: ${ingredients}, suggest a few recipes names, not the complete recipe. If an ingredient isn't edible, exclude it from consideration`;
-      fetchOpenAIResponse(query);
-    }
+    const ingredients = inventory.map(item => item.name).join(', ');
+    const query = `Using these ingredients: ${ingredients}, suggest a few recipes names, not the complete recipe. If an ingredient isn't edible, exclude it from consideration`;
+    fetchOpenAIResponse(query);
   };
 
   return (
@@ -267,7 +263,7 @@ export default function Home() {
           Add New Item
         </Button>
         <Button variant="contained" color="primary" onClick={handleAskOpenAI} sx={{ fontSize: '0.875rem', borderRadius: 1 }}>
-          Find recipes!
+          Ask OpenAI
         </Button>
         <Typography variant="h6">
           Recipe list: {openAIResponse}
