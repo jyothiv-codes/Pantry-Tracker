@@ -96,10 +96,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const filteredItems = inventory.filter((item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredInventory(filteredItems);
+    if (typeof window !== 'undefined') {
+      const filteredItems = inventory.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredInventory(filteredItems);
+    }
   }, [searchQuery, inventory]);
 
   const addItem = async (item, quantity) => {
@@ -167,35 +169,39 @@ export default function Home() {
   };
 
   const fetchOpenAIResponse = async (query) => {
-    try {
-      const response = await fetch('/api/ask-openai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/ask-openai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        setOpenAIResponse(data.answer || 'No answer found');
+      } catch (error) {
+        console.error('Error fetching OpenAI response:', error);
+        setOpenAIResponse('Failed to fetch response');
       }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setOpenAIResponse(data.answer || 'No answer found');
-    } catch (error) {
-      console.error('Error fetching OpenAI response:', error);
-      setOpenAIResponse('Failed to fetch response');
     }
   };
 
   const handleAskOpenAI = () => {
-    const ingredients = inventory.map(item => item.name).join(', ');
-    const query = `Using these ingredients: ${ingredients}, suggest a few recipes names, not the complete recipe. If an ingredient isn't edible, exclude it from consideration`;
-    fetchOpenAIResponse(query);
+    if (typeof window !== 'undefined') {
+      const ingredients = inventory.map(item => item.name).join(', ');
+      const query = `Using these ingredients: ${ingredients}, suggest a few recipes names, not the complete recipe. If an ingredient isn't edible, exclude it from consideration`;
+      fetchOpenAIResponse(query);
+    }
   };
 
   return (
