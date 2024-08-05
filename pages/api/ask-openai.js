@@ -5,13 +5,20 @@ const openai = new OpenAI({
 });
 
 export default async function handler(req, res) {
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: 'OpenAI API key is not configured' });
+  }
+
   if (req.method === 'POST') {
     const { query } = req.body;
 
+    if (!query) {
+      return res.status(400).json({ error: 'Query is required' });
+    }
+
     try {
-      
       const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',  
+        model: 'gpt-3.5-turbo',
         messages: [{ role: 'user', content: query }],
       });
 

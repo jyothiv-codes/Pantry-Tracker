@@ -96,12 +96,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const filteredItems = inventory.filter((item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredInventory(filteredItems);
-    }
+    const filteredItems = inventory.filter((item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredInventory(filteredItems);
   }, [searchQuery, inventory]);
 
   const addItem = async (item, quantity) => {
@@ -169,28 +167,30 @@ export default function Home() {
   };
 
   const fetchOpenAIResponse = async (query) => {
-    try {
-      const response = await fetch('/api/ask-openai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/ask-openai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        setOpenAIResponse(data.answer || 'No answer found');
+      } catch (error) {
+        console.error('Error fetching OpenAI response:', error);
+        setOpenAIResponse('Failed to fetch response');
       }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setOpenAIResponse(data.answer || 'No answer found');
-    } catch (error) {
-      console.error('Error fetching OpenAI response:', error);
-      setOpenAIResponse('Failed to fetch response');
     }
   };
 
@@ -265,56 +265,61 @@ export default function Home() {
         <Button variant="contained" color="primary" onClick={handleAskOpenAI} sx={{ fontSize: '0.875rem', borderRadius: 1 }}>
           Ask OpenAI
         </Button>
-        <Typography variant="h6">
-          Recipe list: {openAIResponse}
-        </Typography>
+        {openAIResponse && (
+          <Paper sx={{ p: 2, mt: 2, width: '600px', borderRadius: 1 }}>
+            <Typography variant="h6" component="h2" fontSize="1rem" sx={{ mb: 1 }}>
+              OpenAI Response
+            </Typography>
+            <Typography variant="body1" fontSize="0.875rem">
+              {openAIResponse}
+            </Typography>
+          </Paper>
+        )}
       </Stack>
-      <Box sx={tableStyle}>
-        <Box sx={headerStyle}>
-          <Typography variant={'h3'} color={'#fff'} textAlign={'center'} fontSize="1.5rem">
-            Inventory Items
-          </Typography>
-        </Box>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={tableHeaderStyle}>Item</TableCell>
-                <TableCell sx={tableHeaderStyle}>Quantity</TableCell>
-                <TableCell sx={tableHeaderStyle}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredInventory.map(({ name, quantity }) => (
-                <TableRow key={name}>
-                  <TableCell sx={tableCellStyle}>
-                    {name.charAt(0).toUpperCase() + name.slice(1)}
-                  </TableCell>
-                  <TableCell sx={tableCellStyle}>{quantity}</TableCell>
-                  <TableCell sx={actionsCellStyle}>
-                    <Stack direction="row" spacing={1}>
-                      <Button
-                        variant="contained"
-                        sx={{ fontSize: '0.75rem', borderRadius: 1, bgcolor: '#4A90E2', color: '#fff', width: '80px' }}
-                        onClick={() => handleOpen({ name, quantity })}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="contained"
-                        sx={{ fontSize: '0.75rem', borderRadius: 1, bgcolor: '#4A90E2', color: '#fff', width: '80px' }}
-                        onClick={() => removeItem(name)}
-                      >
-                        Remove
-                      </Button>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      <Box sx={headerStyle}>
+        <Typography variant="h4" component="h1" fontSize="1.5rem" color="#fff">
+          Inventory
+        </Typography>
       </Box>
+      <TableContainer component={Paper} sx={tableStyle}>
+        <Table aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell sx={tableHeaderStyle}>Item</TableCell>
+              <TableCell sx={tableHeaderStyle}>Quantity</TableCell>
+              <TableCell sx={tableHeaderStyle}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredInventory.map((item) => (
+              <TableRow key={item.name}>
+                <TableCell sx={tableCellStyle}>{item.name}</TableCell>
+                <TableCell sx={tableCellStyle}>{item.quantity}</TableCell>
+                <TableCell sx={actionsCellStyle}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    onClick={() => handleOpen(item)}
+                    sx={{ fontSize: '0.75rem' }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    size="small"
+                    onClick={() => removeItem(item.name)}
+                    sx={{ fontSize: '0.75rem' }}
+                  >
+                    Remove
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 }
